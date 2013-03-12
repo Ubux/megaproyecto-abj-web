@@ -1,0 +1,15 @@
+{
+  "name": "megaproyecto-abj-web",
+  "description": "ABJ web application",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.x"
+    , "stylus": ">= 0.0.1"
+    , "jade": ">= 0.0.1"
+    , "nib": ">= 0.0.1"
+    , "mongodb": ">= 0.9.6-7"
+    , "mongoose": ">= 0.0.1"
+    , "coffee-script": ">= 1.5.0"
+  }
+}

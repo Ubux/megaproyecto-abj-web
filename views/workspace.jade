@@ -1,0 +1,120 @@
+!!!5
+html(lang="es")
+	head
+		meta(charset="utf-8")
+		title Megaproyecto
+		link(rel='stylesheet', href='/stylesheets/normalize.css')
+		link(rel='stylesheet', href='/stylesheets/stylesx.css') 
+		script(src="/javascripts/prefixfree.min.js")
+		script(src="/javascripts/jquery.js")
+		script(src="/javascripts/kinetic.js")
+		script(src="/javascripts/jquery-ui.js")
+
+	body
+		nav 
+			ul
+				li
+					a(href="#") 
+						img(src="/images/home.png")
+				li
+					a(href="#") 
+						img(src="/images/save.png")
+				li
+					a(href="#") 
+						img(src="/images/undo.png")
+		#workspace.drop-zone
+		section#groups
+			article#tabs
+				ul
+					li 
+						a(href="#") Todos
+					li
+						a(href="#") Contenedores
+					li
+						a(href="#") Ingredientes
+			article#objects
+				figure#azucar
+					img(src="/images/objects/azucar.png").drag
+				figure#flores
+					img(src="/images/objects/flores.png").drag
+				figure#gabinete
+					img(src="/images/objects/gabinete.png").drag
+				figure#refrigerador
+					img(src="/images/objects/refrigerador.png").drag
+script
+	$h = $("#workspace").height();
+	$w = $("#workspace").width();
+
+	$stage = new Kinetic.Stage({
+		container: "workspace",
+		width: $w,
+		height: $h
+	});
+    
+	$layer = new Kinetic.Layer();
+
+	var imageObj2 = new Image();
+	imageObj2.src = 'images/background/house.jpg';
+
+	var backgroundImg = new Kinetic.Image({
+		image: imageObj2,
+		x: 0,
+		y: 0,
+		width: $w,
+		height: $h,
+		draggable: false,
+		dragOnTop: false
+	});
+
+	$layer.add(backgroundImg);
+	$stage.add($layer);
+
+	function drawImage(imageObj) { 
+
+		var darthVaderImg = new Kinetic.Image({
+			image: imageObj,
+			x: $stage.getWidth() / 2 - 200 / 2,
+			y: $stage.getHeight() / 2 - 137 / 2,
+			width: 200,
+			height: 137,
+			draggable: true,
+			dragOnTop: false
+		});
+
+		darthVaderImg.on('mouseover', function() {
+			document.body.style.cursor = 'pointer';
+		});
+		darthVaderImg.on('mouseout', function() {
+			document.body.style.cursor = 'default';
+		});
+
+		$layer.add(darthVaderImg);
+		$stage.add($layer);
+	}
+
+	var imageObj = new Image();
+	imageObj.onload = function() {
+		drawImage(this);
+	};
+	imageObj.src = 'images/objects/Mesa1.png';
+
+	var imageObj1 = new Image();
+	imageObj1.onload = function() {
+		drawImage(this);
+	};
+	imageObj1.src = 'images/objects/Maceta3.png';
+
+	jQuery(function($) {
+		$('.drop-zone').droppable({
+			accept: '.drag',
+			drop: function(event, ui) {
+				ui.draggable.context.remove();
+				var imageObj = new Image();
+				imageObj.src = ui.draggable.context.src;
+				drawImage(imageObj);
+			}
+		});
+		
+		$('.drag').draggable({ revert: true });
+	});
+
