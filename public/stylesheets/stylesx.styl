@@ -61,6 +61,7 @@ nav
 		color #333
 		margin 0
 		padding 0.5em
+		text-align center
 
 		figure
 			border 3px solid #ccc
@@ -78,6 +79,11 @@ nav
 			img
 				height 3em
 				width 3em
+
+		#figures
+			display inline-block
+			text-align left
+			width 85%
 
 	#tabs
 		opacity 0.3
@@ -120,3 +126,31 @@ nav
 
 	canvas
 		position relative!important
+
+.arrow_head
+	border-color transparent transparent transparent transparent
+	border-style solid
+	border-width 20px
+	cursor pointer
+	display inline-block
+	margin 0 1em 0 1em
+	opacity 0.5
+	transition all 0.5s ease
+	width 0px
+
+	&:hover
+		opacity 1
+		transform scale(1.5)
+
+.top_arrow 
+	border-bottom-color #FFCC33
+
+.down_arrow 
+	border-top-color #FFCC33
+
+.right_arrow 
+	border-left-color #FFCC33
+
+.left_arrow 
+	border-right-color #FFCC33
+
