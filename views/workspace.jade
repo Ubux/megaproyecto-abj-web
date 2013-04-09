@@ -39,7 +39,7 @@ html(lang="es")
 script
 	var $stage = {};
 	var $layer = {};
-	var socket = io.connect('http://54.225.68.40');
+	var socket = io.connect('http://#{ serverIP }');
 	var $height = 0;
 	var $width = 0;
 	var $pageSize = 10;
@@ -149,7 +149,7 @@ script
 	function startSocket()
 	{
 		socket.on('connect', function(){
-			socket.emit('jointoworkspace');
+			socket.emit('jointoworkspace', '#{ problemId }');
 		});
 
 		socket.on('updateworkspace', function (action, data) {
@@ -211,7 +211,7 @@ script
 
 	function getObjectsPaged(pageNumber, pageSize)
 	{
-		var url = 'objects/' + pageNumber + '/' + pageSize;
+		var url = 'http://#{ serverIP }/objects/' + pageNumber + '/' + pageSize;
 		$.getJSON(url, function(objects) {  
 			var count = 0;
 			var clone = $('#figures').clone();

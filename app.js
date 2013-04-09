@@ -1,16 +1,18 @@
 /*
  * Module dependencies
  */
-var express = require('express')
-  , stylus = require('stylus')
-  , nib = require('nib')
-  , mongoose = require('mongoose')
-  , http = require('http')
-  , socketio = require('socket.io')
-  , Action = require('./models/action.js')
-  , _Object = require('./models/object.js')
-  , Problem = require('./models/problem.js');
+var crypto    = require('crypto')
+  , express   = require('express')
+  , http      = require('http')
+  , mongoose  = require('mongoose')
+  , nib       = require('nib')
+  , socketio  = require('socket.io')
+  , stylus    = require('stylus')
+  , Action    = require('./models/action.js')
+  , _Object   = require('./models/object.js')
+  , Problem   = require('./models/problem.js');
 
+var SERVERIP = '127.0.0.1';
 var app = module.exports = express()
 mongoose.connect('mongodb://localhost/lol');
 
@@ -25,15 +27,20 @@ db.once('open', function callback () {
 
 io.sockets.on('connection', function (socket) {
   socket.on('jointoworkspace', function (problemId) {
-    socket.room = '123456';
-    socket.join('123456');
-    socket.broadcast.to('123456').emit('updateworkers', 'Hay un nuevo colaborador.');
+    socket.room = problemId;
+    socket.join(problemId);
+    socket.broadcast.to(problemId).emit('updateworkers', 'Hay un nuevo colaborador.');
   });
   socket.on('addobject', function (data) {
+    Problem.find(socket.room, 'first', function (err, doc) {
+      if (err) return handleError(err);
+      
+    })
+
     io.sockets.in(socket.room).emit('updateworkspace', 'add', data);
   });
   socket.on('moveobject', function (data) {
-    socket.broadcast.to('123456').emit('updateworkspace', 'move', data);
+    socket.broadcast.to(socket.room).emit('updateworkspace', 'move', data);
   });
 });
 
@@ -57,8 +64,22 @@ app.get('/', function (req, res) {
   { title : 'Home' }
   )
 })
-app.get('/workspace', function (req, res) {
-  res.render('workspace');
+app.get('/workspace/:problemId', function (req, res) {
+  res.render('workspace', {problemId: req.params.problemId, serverIP: SERVERIP});
+})
+app.get('/problems/create/:name', function (req, res){
+  var name = req.params.name;
+  var now = new Date();
+  var id = crypto.createHash('md5').update(name).update(now.toTimeString()).digest('hex');
+  var problem = new Problem({ id: id, name: name });
+
+  problem.save(function (err) {
+  if (err) return console.log(err);
+    Problem.findById(problem, function (err, doc) {
+      if (err) return handleError(err);
+      res.redirect('/workspace/'+doc.id)
+    })
+  });
 })
 app.get('/objects/:pageNumber/:pageSize', function (req, res){
   var from = req.params.pageNumber * req.params.pageSize;
