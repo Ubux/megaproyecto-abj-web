@@ -4,7 +4,8 @@ var mongoose = require('mongoose')
   , ObjectId = Schema.Types.ObjectId;
  
  var objectSchema = new Schema({
-    object: [_Object],
+    key: String,
+    object: { type: ObjectId, ref: 'Object' },
     position: {
     	x: Number,
     	y: Number

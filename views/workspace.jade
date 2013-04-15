@@ -89,7 +89,7 @@ script
 
 		$layer.add(backgroundImg);
 		
-		setTimeout(function(){$layer.draw();},50);
+		setTimeout(function(){$layer.draw();},70);
 
 		$percentHeight = $height / $defaultHeight;
 		$percentWidth = $width / $defaultWidth;
@@ -103,7 +103,8 @@ script
 				var img = $(ui.draggable.context);
 				var json = JSON.parse(img.attr('json'));
 				var key = json.name + (Math.floor((Math.random()*1000)+1));
-				var data =  '{"key": "' +  key + '", ' +
+				var data =  '{"id": "' +  json._id + '", ' +
+							'"key": "' +  key + '", ' +
 							'"src": "' +  ui.draggable.context.src + '", ' +
 							'"x": ' + ui.position.left + ', ' +
 							'"y": ' + ui.position.top + ', ' +
@@ -152,18 +153,29 @@ script
 			socket.emit('jointoworkspace', '#{ problemId }');
 		});
 
+		socket.on('startproblem', function (problem) {
+			var jsonProblem = JSON.parse(problem);
+			console.log(jsonProblem);
+			$.each(jsonProblem.objects,function(index, value){
+				var object = value.object; 
+				var position = value.position;
+
+				drawImage(object._id, value.key, 'http://#{ serverIP }/images/objects/'+ object.image, position.x, position.y, object.height, object.width);
+			});		
+
+		});
 		socket.on('updateworkspace', function (action, data) {
 			var json = JSON.parse(data);
 			if(action === 'add')
 			{
-				drawImage(json.key, json.src, json.x, json.y, json.height, json.width);	
+				drawImage(json.id, json.key, json.src, json.x, json.y, json.height, json.width);	
 			}
 			if(action === 'move')
 			{
 				var image = $objects[json.key];
 				if(image)
 				{
-					image.setPosition(json.x, json.y);
+					image.setPosition(json.x, json.y + $stage.getHeight());
 					$layer.draw();	
 				}
 			}
@@ -175,11 +187,12 @@ script
 		});
 	}
 
-	function drawImage(key, src, x, y, height, width) { 
+	function drawImage(id, key, src, x, y, height, width) { 
 
 		var imageObj = new Image();
 		imageObj.src = src;
 		var darthVaderImg = new Kinetic.Image({
+			id: id,
 			key: key,
 			image: imageObj,
 			x: x,
@@ -200,13 +213,13 @@ script
 			var data = {};
 			data['key'] = darthVaderImg.attrs.key;
 			data['x'] = darthVaderImg.getPosition().x;
-			data['y'] = darthVaderImg.getPosition().y;
+			data['y'] = darthVaderImg.getPosition().y - $stage.getHeight();
 			socket.emit('moveobject', JSON.stringify(data));
 		});
 
 		$objects[key] = darthVaderImg;
 		$layer.add(darthVaderImg);
-		setTimeout(function(){$layer.draw();},30);
+		setTimeout(function(){$layer.draw();},70);
 	}
 
 	function getObjectsPaged(pageNumber, pageSize)

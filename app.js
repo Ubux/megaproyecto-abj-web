@@ -30,16 +30,48 @@ io.sockets.on('connection', function (socket) {
     socket.room = problemId;
     socket.join(problemId);
     socket.broadcast.to(problemId).emit('updateworkers', 'Hay un nuevo colaborador.');
+    Problem.findOne(problemId)
+           .populate('objects.object')
+           .exec(function (err, problem) {
+                  if (err) return handleError(err);
+                  socket.to(problemId).emit('startproblem', JSON.stringify(problem));
+                });
+    
   });
   socket.on('addobject', function (data) {
-    Problem.find(socket.room, 'first', function (err, doc) {
+
+    Problem.findOne(socket.room, function (err, doc) {
       if (err) return handleError(err);
-      
-    })
+      oData = JSON.parse(data);
+
+      _Object.findOne(oData.id, function (err1, object) {
+        if (err1) return undefined;
+        doc.objects.push({ key: oData.key, object: oData.id, position:{ x: oData.x, y: oData.y } });
+        doc.save();
+      });
+    });
 
     io.sockets.in(socket.room).emit('updateworkspace', 'add', data);
   });
   socket.on('moveobject', function (data) {
+    
+    //socket.room
+    Problem.findOne(socket.room , function (err, problem) {
+      if (err) return handleError(err);
+      oData = JSON.parse(data);
+
+      problem.objects.forEach(function(object, index, array) {
+          if(object.key === oData.key)
+          {
+            object.position.x = oData.x;
+            object.position.y = oData.y;
+            problem.save();
+            return;
+          }
+      });
+
+    });
+
     socket.broadcast.to(socket.room).emit('updateworkspace', 'move', data);
   });
 });
