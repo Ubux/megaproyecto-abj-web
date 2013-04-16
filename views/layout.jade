@@ -1,15 +1,54 @@
 !!!5
-html
+html(lang="es")
   head
-    title #{title} - My Site
+    meta(charset="utf-8")
+    title #{title} - Megaproyecto ABJ
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+    link(rel='stylesheet', href='/stylesheets/bootstrap-responsive.css')
     link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    header
-      h1 My Site
-    .container
-      .main-content
-        block content
-      .sidebar
-        block sidebar
-    footer
-      p Running on node with Express, Jade and Stylus
+  body.container
+      header.hero-unit
+        img(src="/images/header.png")
+
+      section#content
+        article.row-fluid
+          ul.thumbnails
+            li.span3
+              a.thumbnail
+                img(src="/images/background/house.jpg")
+                span.thumbnaildetail Preparar refresco
+            li.span3
+              a.thumbnail
+                img(src="/images/background/jardin.png")
+                span.thumbnaildetail Regar jardín
+            li.span3
+              a.thumbnail
+                img(src="/images/background/house.jpg")
+                span.thumbnaildetail Preparar refresco
+            li.span3
+              a.thumbnail
+                img(src="/images/background/jardin.png")
+                span.thumbnaildetail Regar jardín
+        article.row-fluid
+          ul.thumbnails
+            li.span3
+              a.thumbnail
+                img(src="/images/background/house.jpg")
+                span.thumbnaildetail Preparar refresco
+            li.span3
+              a.thumbnail
+                img(src="/images/background/jardin.png")
+                span.thumbnaildetail Regar jardín
+            li.span3
+              a.thumbnail
+                img(src="/images/background/house.jpg")
+                span.thumbnaildetail Preparar refresco
+            li.span3
+              a.thumbnail
+                img(src="/images/background/jardin.png")
+                span.thumbnaildetail Regar jardín
+      
+  block javascripts
+    script(src="/javascripts/jquery.js")
+    script(src="/javascripts/bootstrap.js")
