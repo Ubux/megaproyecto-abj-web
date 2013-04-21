@@ -6,6 +6,7 @@ var mongoose = require('mongoose')
 var objectSchema = new Schema({
     name:  String,
     image:  String,
+    weight: Number,
     size: {
     	height: Number,
     	width: Number

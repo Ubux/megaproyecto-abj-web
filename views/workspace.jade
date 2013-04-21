@@ -5,10 +5,13 @@ html(lang="es")
 		title Megaproyecto
 		link(rel='stylesheet', href='/stylesheets/normalize.css')
 		link(rel='stylesheet', href='/stylesheets/stylesx.css') 
+		link(rel='stylesheet', href='/stylesheets/bootstrap.css') 
+		link(rel='stylesheet', href='/stylesheets/bootstrap-responsive.css')
 		script(src="/javascripts/jquery.js")
 		script(src="/javascripts/kinetic.js")
 		script(src="/javascripts/jquery-ui.js")
 		script(src="/socket.io/socket.io.js")
+		script(src="/javascripts/bootstrap.js")
 	body
 		nav 
 			ul
@@ -19,7 +22,7 @@ html(lang="es")
 					a(href="#") 
 						img(src="/images/save.png")
 				li
-					a(href="#") 
+					a(href="#background", data-toggle="modal") 
 						img(src="/images/undo.png")
 		#workspace.drop-zone
 		section#groups
@@ -35,20 +38,41 @@ html(lang="es")
 				div.arrow_head.left_arrow
 				div#figures
 				div.arrow_head.right_arrow
-				
+
+		#background.modal.hide.fade(tabindex="-1", role="dialog", ria-labelledby="backgroundLabel", aria-hidden="true") 
+			.modal-header
+				button.close(type="button", data-dismiss="modal", aria-hidden="true")
+				h3#backgroundLabel Cambiar imagen de fondo 
+			.modal-body
+				.row
+					form(action="", method="post", enctype="multipart/form-data")
+						input#fileField(type="file", name="fileField", title="zas")
+				.row
+					#drop-file-zone.span5
+						p#dropMessage Arrastre su imagen de fondo aquí
+						#image-container
+			.modal-footer
+				button.btn(data-dismiss="modal", aria-hidden="true") Cerrar
+				button#upload.btn.btn-primary Aplicar
+
+
+
 script
 	var $stage = {};
 	var $layer = {};
 	var socket = io.connect('http://#{ serverIP }');
 	var $height = 0;
 	var $width = 0;
-	var $pageSize = 10;
+	var $pageSize = 15;
 	var $pageNumber = 0;
 	var $defaultHeight = 150;
 	var $defaultWidth = 300;
 	var $percentHeight = 0.0;
 	var $percentWidth = 0.0;
 	var $objects = {};
+	var $groups = {};
+	var $selectedImage = undefined;
+	var $backgroundImage = undefined;
 
 	$(document).on("ready", start);
 	function start()
@@ -58,6 +82,22 @@ script
 		startPaged();
 		startSocket();
 		getObjectsPaged($pageNumber, $pageSize);
+		startKeyDown();
+		startFileUploader();
+	}
+
+	function startKeyDown()
+	{
+		document.addEventListener('keydown', function(event) {
+			if(event.keyCode == 46)
+			{
+				if($selectedImage)
+				{
+					var key = $selectedImage.attrs.key;
+					socket.emit('removeobject', key);
+				}
+			}
+		}, false);
 	}
 
 	function startWorkSpace()
@@ -67,27 +107,14 @@ script
 
 		$stage = new Kinetic.Stage({
 			container: "workspace",
+			x: 0,
+			y: 0,
 			width: $width,
 			height: $height
 		});
     
 		$layer = new Kinetic.Layer();
 		$stage.add($layer);
-
-		var imageObj = new Image();
-		imageObj.src = '/images/background/house.jpg';
-
-		var backgroundImg = new Kinetic.Image({
-			image: imageObj,
-			x: 0,
-			y: 0,
-			width: $width,
-			height: $height,
-			draggable: false,
-			dragOnTop: false
-		});
-
-		$layer.add(backgroundImg);
 		
 		setTimeout(function(){$layer.draw();},70);
 
@@ -102,14 +129,34 @@ script
 			drop: function(event, ui) {
 				var img = $(ui.draggable.context);
 				var json = JSON.parse(img.attr('json'));
+
+				var x = ui.position.left + (json.size.width * $percentWidth);
+				var y = ui.position.top + $stage.getHeight() + 20;
+				var parentKey = '';
+
+				//Verifica si realiza drop en un contenedor
+				$.each($groups, function(key, group) {  
+					startX = group.attrs.x;
+					startY = group.attrs.y;
+					endX = startX + $objects[key].attrs.width;
+					endY = startY + $objects[key].attrs.height;
+
+					if((x >= startX && x <= endX) && (y >= startY && y <= endY))
+					{
+						parentKey = key;
+						return;
+					}
+				});				
+				
 				var key = json.name + (Math.floor((Math.random()*1000)+1));
 				var data =  '{"id": "' +  json._id + '", ' +
+							'"parentKey": "' +  parentKey + '", ' +
 							'"key": "' +  key + '", ' +
 							'"src": "' +  ui.draggable.context.src + '", ' +
-							'"x": ' + ui.position.left + ', ' +
-							'"y": ' + ui.position.top + ', ' +
-							'"height": ' + (json.size.height * $percentHeight) + ', ' +
-							'"width": ' + (json.size.width * $percentWidth) + '}';
+							'"x": ' + x + ', ' +
+							'"y": ' + y + ', ' +
+							'"height": ' + (json.size.height) + ', ' +
+							'"width": ' + (json.size.width) + '}';
 
 				socket.emit('addobject', data);
 			}
@@ -156,28 +203,87 @@ script
 		socket.on('startproblem', function (problem) {
 			var jsonProblem = JSON.parse(problem);
 			console.log(jsonProblem);
+
+			var imageObj = new Image();
+			imageObj.src = 'http://#{ serverIP }/images/background/' + jsonProblem.background;
+
+			$backgroundImage = new Kinetic.Image({
+				image: imageObj,
+				x: 0,
+				y: 0,
+				width: $width,
+				height: $height,
+				draggable: false,
+				dragOnTop: false
+			});
+
+			$layer.add($backgroundImage);
+			$layer.draw();
+
 			$.each(jsonProblem.objects,function(index, value){
 				var object = value.object; 
 				var position = value.position;
+				var size = value.object.size;
+				drawImage(object._id, value.key, 'http://#{ serverIP }/images/objects/'+ object.image, position.x, position.y, size.height, size.width);
 
-				drawImage(object._id, value.key, 'http://#{ serverIP }/images/objects/'+ object.image, position.x, position.y, object.height, object.width);
+				$.each(value.children,function(childrenIndex, childrenValue){
+					var childrenObject = childrenValue.object; 
+					var childrendPosition = childrenValue.position;
+					var childrenSize = childrenValue.object.size; 
+					drawChildImage($groups[value.key], childrenObject._id, childrenValue.key, 'http://#{ serverIP }/images/objects/'+ childrenObject.image, childrendPosition.x, childrendPosition.y, childrenSize.height, childrenSize.width);
+				});
 			});		
 
 		});
 		socket.on('updateworkspace', function (action, data) {
-			var json = JSON.parse(data);
+			
 			if(action === 'add')
 			{
-				drawImage(json.id, json.key, json.src, json.x, json.y, json.height, json.width);	
+				var json = JSON.parse(data);
+
+				if(json.parentKey === '')
+				{
+					drawImage(json.id, json.key, json.src, json.x, json.y, json.height, json.width);		
+				}else{
+					drawChildImage($groups[json.parentKey], json.id, json.key, json.src, json.x, json.y, json.height, json.width);
+				}
 			}
 			if(action === 'move')
 			{
-				var image = $objects[json.key];
-				if(image)
+				var json = JSON.parse(data);
+				var group = $groups[json.key];
+				if(group)
 				{
-					image.setPosition(json.x, json.y + $stage.getHeight());
+					group.setPosition(json.x, json.y);
 					$layer.draw();	
 				}
+			}
+			if(action == 'remove')
+			{
+				var group = $groups[data];
+				if(group)
+				{
+					group.remove();
+				}else{
+					var object = $objects[data];
+					if(object)
+					{
+						object.remove();
+					}
+					if($selectedImage &&
+					data === $selectedImage.attrs.key)
+					{
+						$selectedImage = undefined;
+					}
+				}
+				$layer.draw();
+			}
+			if(action == 'background')
+			{
+				var imageObj = new Image();
+				imageObj.src = '/images/background/' + data;
+				$backgroundImage.setImage(imageObj);
+				setTimeout(function(){$layer.draw();},70);
 			}
 			
 		});
@@ -188,6 +294,13 @@ script
 	}
 
 	function drawImage(id, key, src, x, y, height, width) { 
+		var newGroup = new Kinetic.Group({
+			x: x,
+			y: y, 
+			draggable: true,
+			dragOnTop: false
+		});
+		$layer.add(newGroup);
 
 		var imageObj = new Image();
 		imageObj.src = src;
@@ -195,31 +308,71 @@ script
 			id: id,
 			key: key,
 			image: imageObj,
-			x: x,
-			y: $stage.getHeight() + y, 
-			width: width,
-			height: height,
-			draggable: true,
-			dragOnTop: false
+			x: 0,
+			y: 0,
+			width: width * $percentWidth,
+			height: height * $percentHeight,
+			stroke: "Gray",
+			strokeWidth: 2,
+			strokeEnabled: false
 		});
 
-		darthVaderImg.on('mouseover', function() {
-			document.body.style.cursor = 'pointer';
+		darthVaderImg.on('click', function(event)
+		{
+			if($selectedImage)
+			{
+				$selectedImage.disableStroke();
+			}
+			darthVaderImg.enableStroke();
+			$selectedImage = darthVaderImg;
+			setTimeout(function(){$layer.draw();},70);
 		});
-		darthVaderImg.on('mouseout', function() {
-			document.body.style.cursor = 'default';
-		});
-		darthVaderImg.on('dragend', function (event) {
+
+		newGroup.on('dragend', function (event) {
 			var data = {};
 			data['key'] = darthVaderImg.attrs.key;
-			data['x'] = darthVaderImg.getPosition().x;
-			data['y'] = darthVaderImg.getPosition().y - $stage.getHeight();
+			data['x'] = newGroup.getPosition().x;
+			data['y'] = newGroup.getPosition().y;
 			socket.emit('moveobject', JSON.stringify(data));
 		});
 
+		$groups[key] = newGroup;
 		$objects[key] = darthVaderImg;
-		$layer.add(darthVaderImg);
+		newGroup.add(darthVaderImg);
 		setTimeout(function(){$layer.draw();},70);
+	}
+
+	function drawChildImage(group, id, key, src, x, y, height, width)
+	{
+		var imageObj = new Image();
+		imageObj.src = src;
+		var darthVaderImg = new Kinetic.Image({
+			id: id,
+			key: key,
+			image: imageObj,
+			x: 0,
+			y: -1*((height * $percentHeight)/3),
+			width: (width * $percentWidth)/3,
+			height: (height * $percentHeight)/3,
+			stroke: "Red",
+			strokeWidth: 2,
+			strokeEnabled: false
+		});
+
+		$objects[key] = darthVaderImg;
+		group.add(darthVaderImg);
+		setTimeout(function(){$layer.draw();},70);
+
+		darthVaderImg.on('click', function(event)
+		{
+			if($selectedImage)
+			{
+				$selectedImage.disableStroke();
+			}
+			darthVaderImg.enableStroke();
+			$selectedImage = darthVaderImg;
+			setTimeout(function(){$layer.draw();},70);
+		});
 	}
 
 	function getObjectsPaged(pageNumber, pageSize)
@@ -251,4 +404,121 @@ script
 				$(".right_arrow").hide();
 			}
 		});  
+	}
+
+	var dropFileZone = document.getElementById("drop-file-zone");
+	var currentFile = {};
+	function startFileUploader()
+	{
+		$('#upload').on('click', uploadCurrentFile);
+		$('#fileField').on('change', fileFieldChange);
+		dropFileZone.addEventListener("dragover",  dragOver, false);
+		dropFileZone.addEventListener("dragleave",  dragLeave, false);
+		dropFileZone.addEventListener("drop",  droppedFile, false);
+	}
+
+	function fileFieldChange(event)
+	{
+		readFile(this.files[0]);
+	}
+
+	function dragOver(event)
+	{
+		event.stopPropagation();
+		event.preventDefault();
+		this.style["backgroundColor"] = "#F0FCF0";
+		this.style["borderColor"] = "#3DD13F";
+		this.style["color"] = "#3DD13F"
+	}
+
+	function dragLeave(event)
+	{
+		event.stopPropagation();
+		event.preventDefault();
+		this.style["backgroundColor"] = "#FEFEFE";
+		this.style["borderColor"] = "#CCC";
+		this.style["color"] = "#CCC"
+	}
+
+	function droppedFile(event) 
+	{
+		event.stopPropagation();
+		event.preventDefault();
+		var files = event.dataTransfer.files;
+		var file = files[0];
+
+		readFile(file);
+	}
+
+	function readFile(file)
+	{
+		if(file.type === "image/jpeg" || file.type === "image/png")
+		{
+			var fr = new FileReader();
+			fr.file = file;
+			fr.onloadend = showFileInDropZone;
+			fr.readAsDataURL(file);
+		}else
+		{
+			$('#dropMessage').html('La imagen tiene que ser de formato jpeg o png.');
+			dropFileZone.style["backgroundColor"] = "#FF9999";
+			dropFileZone.style["borderColor"] = "#FF0000";
+			dropFileZone.style["color"] = "#FF0000"
+		}
+		
+	}
+
+	function showFileInDropZone(event)
+	{
+		var file = event.target.file;
+		if (file) 
+		{
+			if (file.type.search(/image\/.*/) != -1) 
+			{
+				var image = new Image();
+				image.src = event.target.result;
+				currentFile = file;
+
+				$('#image-container').empty();
+				$('#image-container').append(image);
+
+			}
+		}
+	}
+
+	function uploadCurrentFile()
+	{
+		if(currentFile)
+		{
+			var formData = new FormData();
+			var xhr = new XMLHttpRequest();
+
+			var uploadProgress = function(e) {
+				console.log('----progress----');
+				console.log(e.loaded);
+				console.log(e.total);
+				//if (e.lengthComputable) {
+				//	var percentComplete = (e.loaded/e.total)*100;
+				//}
+			};
+
+			var uploadComplete = function(e) {
+				$('#background').modal('hide');
+				uploadProgress(e);
+				socket.emit('updatebackground', e.target.responseText);
+			};
+
+			var onError = function(err) {
+				console.log('error');
+			};
+
+			xhr.open('post', 'http://#{ serverIP }/upload', true);
+			xhr.addEventListener('error', onError, false);
+			xhr.addEventListener('progress', uploadProgress, false);
+			xhr.setRequestHeader("Cache-Control", "no-cache");
+			xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+			xhr.setRequestHeader("X-File-Name", currentFile.name);
+			xhr.addEventListener('load', uploadComplete, false);
+			xhr.send(currentFile);
+		}
 	}

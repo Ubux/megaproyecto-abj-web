@@ -4,6 +4,7 @@
 var crypto    = require('crypto')
   , express   = require('express')
   , http      = require('http')
+  , fs        = require('fs')
   , mongoose  = require('mongoose')
   , nib       = require('nib')
   , socketio  = require('socket.io')
@@ -32,22 +33,50 @@ io.sockets.on('connection', function (socket) {
     socket.broadcast.to(problemId).emit('updateworkers', 'Hay un nuevo colaborador.');
     Problem.findOne(problemId)
            .populate('objects.object')
+           .populate('objects.children.object')
            .exec(function (err, problem) {
                   if (err) return handleError(err);
-                  socket.to(problemId).emit('startproblem', JSON.stringify(problem));
+                  //problem.objects[0].remove();
+                  //problem.objects[0].remove();
+                  //problem.save();
+                  socket.to(problemId).emit('startproblem', JSON.stringify(problem));                  
                 });
+    
+  });
+  socket.on('updatebackground', function (backgroundName) {
+
+    Problem.findOne(socket.room, function (err, problem) {
+      if (err) return handleError(err);
+      problem.background = backgroundName;
+      problem.save();
+    });
+
+    io.sockets.in(socket.room).emit('updateworkspace', 'background', backgroundName);
     
   });
   socket.on('addobject', function (data) {
 
-    Problem.findOne(socket.room, function (err, doc) {
+    Problem.findOne(socket.room, function (err, problem) {
       if (err) return handleError(err);
       oData = JSON.parse(data);
 
       _Object.findOne(oData.id, function (err1, object) {
         if (err1) return undefined;
-        doc.objects.push({ key: oData.key, object: oData.id, position:{ x: oData.x, y: oData.y } });
-        doc.save();
+        if(oData.parentKey !== '')
+        {
+          problem.objects.forEach(function(object, index, array) {
+            if(object.key === oData.parentKey)
+            {
+              object.children.push({ key: oData.key, object: oData.id, position:{ x: 0, y: 0 } });  
+              return;
+            }
+          });
+        }else
+        {
+          problem.objects.push({ key: oData.key, object: oData.id, position:{ x: oData.x, y: oData.y } });  
+        }
+        
+        problem.save();
       });
     });
 
@@ -74,6 +103,22 @@ io.sockets.on('connection', function (socket) {
 
     socket.broadcast.to(socket.room).emit('updateworkspace', 'move', data);
   });
+  socket.on('removeobject', function (key) {
+
+    Problem.findOne(socket.room, function (err, problem) {
+      if (err) return handleError(err);
+
+      problem.objects.forEach(function(object, index, array) {
+          if(object.key === key)
+          {
+            object.remove();
+            problem.save();
+            return;
+          }
+      });
+    });
+    io.sockets.in(socket.room).emit('updateworkspace', 'remove', key);
+  });
 });
 
 function compile(str, path) {
@@ -91,10 +136,16 @@ app.use(stylus.middleware(
 ))
 app.use(express.static(__dirname + '/public'))
 
-app.get('/', function (req, res) {
-  res.render('index',
-  { title : 'Home' }
+app.get('/problems', function (req, res) {
+  res.render('problems',
+  { title : 'Lista de problemas' }
   )
+})
+app.get('/problems/find/:pageNumber', function (req, res) {
+  res.render('zas')
+})
+app.get('/workspace', function (req, res) {
+  res.render('menu');
 })
 app.get('/workspace/:problemId', function (req, res) {
   res.render('workspace', {problemId: req.params.problemId, serverIP: SERVERIP});
@@ -146,6 +197,29 @@ app.get('/objects/create/:name/:image/:height/:width', function (req, res)
     })
   })
   
+})
+app.post('/upload', function (req, res) {
+  if(req.xhr) {
+    console.log('Uploading...');
+    var fileName = req.header('x-file-name');
+    var now = new Date();
+    fileName = crypto.createHash('md5').update(fileName).update(now.toTimeString()).digest('hex')+'.jpg';
+
+    var content = '';
+    req.setEncoding("binary");
+
+    req.addListener('data', function(chunk) {
+        content += chunk;
+    });
+
+    req.addListener('end', function() {
+        fs.writeFile('./public/images/background/'+fileName, content, "binary", function (err) {
+            res.writeHead(200, {'content-type': 'text/plain'});
+            res.end(fileName);
+        });
+    });
+
+  }
 })
 
 server.listen(80)

@@ -8,47 +8,15 @@ html(lang="es")
     link(rel='stylesheet', href='/stylesheets/bootstrap-responsive.css')
     link(rel='stylesheet', href='/stylesheets/style.css')
   body.container
+    block header
       header.hero-unit
         img(src="/images/header.png")
 
-      section#content
-        article.row-fluid
-          ul.thumbnails
-            li.span3
-              a.thumbnail
-                img(src="/images/background/house.jpg")
-                span.thumbnaildetail Preparar refresco
-            li.span3
-              a.thumbnail
-                img(src="/images/background/jardin.png")
-                span.thumbnaildetail Regar jardín
-            li.span3
-              a.thumbnail
-                img(src="/images/background/house.jpg")
-                span.thumbnaildetail Preparar refresco
-            li.span3
-              a.thumbnail
-                img(src="/images/background/jardin.png")
-                span.thumbnaildetail Regar jardín
-        article.row-fluid
-          ul.thumbnails
-            li.span3
-              a.thumbnail
-                img(src="/images/background/house.jpg")
-                span.thumbnaildetail Preparar refresco
-            li.span3
-              a.thumbnail
-                img(src="/images/background/jardin.png")
-                span.thumbnaildetail Regar jardín
-            li.span3
-              a.thumbnail
-                img(src="/images/background/house.jpg")
-                span.thumbnaildetail Preparar refresco
-            li.span3
-              a.thumbnail
-                img(src="/images/background/jardin.png")
-                span.thumbnaildetail Regar jardín
-      
+    block body
+
+    block footer
+
+  script(src="/javascripts/jquery.js")
+  script(src="/javascripts/bootstrap.js")
+
   block javascripts
-    script(src="/javascripts/jquery.js")
-    script(src="/javascripts/bootstrap.js")

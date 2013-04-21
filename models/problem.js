@@ -3,9 +3,19 @@ var mongoose = require('mongoose')
   , Schema = mongoose.Schema
   , ObjectId = Schema.Types.ObjectId;
  
+ var otherSchema = new Schema({
+    key: String,
+    object: { type: ObjectId, ref: 'Object' },
+    position: {
+      x: Number,
+      y: Number
+    }
+});
+
  var objectSchema = new Schema({
     key: String,
     object: { type: ObjectId, ref: 'Object' },
+    children: [otherSchema],
     position: {
     	x: Number,
     	y: Number
@@ -13,10 +23,12 @@ var mongoose = require('mongoose')
 });
 
 var problemSchema = new Schema({
-	id: String,
+  	id: String,
     name:  String,
     background:  String,
-    objects: [objectSchema]
+    description: String,
+    objects: [objectSchema],
+    completed: Boolean
 });
  
 module.exports = mongoose.model('Problem', problemSchema);

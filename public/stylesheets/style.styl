@@ -6,15 +6,70 @@
 .hero-unit 
 	padding 0px !important
 
-.hero-unit img
-	width 100%
+	img
+		width 100%
 
-.thumbnaildetail
-	display block
-	padding 9px
-	font-family Georgia
-	font-style italic
-	text-align center
-	width auto
-	height auto
-	max-width 100%
+.problem
+	border-radius 0.3em
+	position relative
+	overflow hidden
+	margin 0px 0px 50px 0px
+
+	.title
+		background #2B2B2B
+		color #fff
+		display block
+		font-family Georgia
+		font-size 14px
+		height auto
+		max-width 100%
+		padding 9px
+		width auto
+
+	.detail
+		position relative
+		overflow hidden
+
+		.overlay
+			height 0
+			margin 0
+			overflow hidden
+			padding 0
+			position relative
+			opacity 0
+			transition all 0.5s ease
+			width 100%
+
+			.actions
+				bottom 0%
+				margin-top 30px
+				position absolute
+				text-align center
+				width 100%
+
+			.legend 
+				bottom 0%
+				color #fff
+				font-size 12px
+				padding 0px 10px
+				position absolute
+
+				p 
+					line-height 15px 
+					overflow hidden
+
+		&:hover .overlay
+			background #336688
+			display block
+			height 100% !important
+			margin-top 0%
+			opacity 0.6
+			position absolute
+			top 0px
+
+			.actions
+				position relative
+			
+
+
+	

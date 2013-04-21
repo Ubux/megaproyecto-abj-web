@@ -7,13 +7,73 @@
 .hero-unit img {
   width: 100%;
 }
-.thumbnaildetail {
+.problem {
+  -webkit-border-radius: 0.3em;
+  border-radius: 0.3em;
+  position: relative;
+  overflow: hidden;
+  margin: 0px 0px 50px 0px;
+}
+.problem .title {
+  background: #2b2b2b;
+  color: #fff;
   display: block;
-  padding: 9px;
   font-family: Georgia;
-  font-style: italic;
-  text-align: center;
-  width: auto;
+  font-size: 14px;
   height: auto;
   max-width: 100%;
+  padding: 9px;
+  width: auto;
+}
+.problem .detail {
+  position: relative;
+  overflow: hidden;
+}
+.problem .detail .overlay {
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  opacity: 0;
+  filter: alpha(opacity=0);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  -ms-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+  width: 100%;
+}
+.problem .detail .overlay .actions {
+  bottom: 0%;
+  margin-top: 30px;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+}
+.problem .detail .overlay .legend {
+  bottom: 0%;
+  color: #fff;
+  font-size: 12px;
+  padding: 0px 10px;
+  position: absolute;
+}
+.problem .detail .overlay .legend p {
+  line-height: 15px;
+  overflow: hidden;
+}
+.problem .detail:hover .overlay {
+  background: #368;
+  display: block;
+  height: 100% !important;
+  margin-top: 0%;
+  opacity: 0.6;
+  filter: alpha(opacity=60);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
+  position: absolute;
+  top: 0px;
+}
+.problem .detail:hover .overlay .actions {
+  position: relative;
 }

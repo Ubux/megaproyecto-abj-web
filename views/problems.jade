@@ -1,0 +1,101 @@
+extend layout
+block body
+  section#content
+    article.row-fluid
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/jardin.png")
+            div.overlay
+              div.actions
+                a(href="/problems/find/2").preview
+                a(href="/problems/find/2").download
+              div.legend
+                p zasdfasfasdfasdf asdfasfasfasdf asdfasdfasdfasdfasfasfasd
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/house.jpg")
+            div.overlay
+              div.actions
+                a(href="/problems/find/2") Visualizar
+                a(href="/problems/find/2") Descargar
+              div.legend
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/jardin.png")
+            div.overlay
+              div.actions
+                a(href="/problems/find/2") Visualizar
+                a(href="/problems/find/2") Descargar
+              div.legend 
+                p zasdfasfasdfasdfa sdfasfasfasdfasd fasdfasdfasdfasfasfasd sd gsdfg sdfg sdgsd gsd 
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/house.jpg")
+            div.overlay
+              div.actions
+                a(href="/problems/find/2") Visualizar
+                a(href="/problems/find/2") Descargar
+              div.legend  
+    article.row-fluid
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/jardin.png")
+            div.overlay
+              div.actions
+              div.legend
+                p zasdfasfasdfasdf asdfasfasfasdf asdfasdfasdfasdfasfasfasd sdg sdg sd gsdg sdg sdfg 
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/house.jpg")
+            div.overlay
+              div.actions
+              div.legend
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/jardin.png")
+            div.overlay
+              div.actions
+              div.legend 
+                p zasdfasfasdfasdfa sdfasfasfasdfasd fasdfasdfasdfasfasfasd
+      div.span3
+        div.problem
+          div.title Regar jardín
+          div.detail
+            img(src="/images/background/house.jpg")
+            div.overlay
+              div.actions
+              div.legend  
+  nav#page_nav
+    a(href="/problems/find/2")
+
+block javascripts
+  script(src="/javascripts/jquery-infinitescroll.js")
+  script
+    $(document).on("ready", start);
+    function start()
+    {
+      $('#page_nav').hide();
+      $('#content').infinitescroll({
+        navSelector  : '#page_nav',    // selector for the paged navigation 
+        nextSelector : '#page_nav a',  // selector for the NEXT link (to page 2)
+        itemSelector : '.row-fluid',     // selector for all items you'll retrieve
+        loading: {
+          finishedMsg: 'No more pages to load.',
+          img: 'http://i.imgur.com/qkKy8.gif'
+        }
+      });
+    }
