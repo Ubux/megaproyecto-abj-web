@@ -68,9 +68,9 @@
   display: block;
   height: 100% !important;
   margin-top: 0%;
-  opacity: 0.6;
-  filter: alpha(opacity=60);
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
   position: absolute;
   top: 0px;
 }
