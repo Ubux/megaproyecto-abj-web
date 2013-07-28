@@ -12,5 +12,8 @@
     , "mongoose": ">= 0.0.1"
     , "coffee-script": ">= 1.5.0"
     , "socket.io": ">= 0.9"
+    , "mkdirp": "0.3.5"
+    , "rimraf": "2.1.4"
+    , "tar.gz": "0.1.1"
   }
 }

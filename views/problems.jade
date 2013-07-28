@@ -2,91 +2,20 @@ extend layout
 block body
   section#content
     article.row-fluid
-      div.span3
-        div.problem
-          div.title Cañon
-          div.detail
-            img(src="/images/problems/001.png")
-            div.overlay
-              div.actions
-                a(href="/problems/find/2") 
-                  img(src="/images/preview.png")
-                a(href="/problems/find/2") 
-                  img(src="/images/download.png")
-              div.legend
-                p zasdfasfasdfasdf asdfasfasfasdf asdfasdfasdfasdfasfasfasd
-      div.span3
-        div.problem
-          div.title Viaje a las montañas
-          div.detail
-            img(src="/images/problems/002.png")
-            div.overlay
-              div.actions
-                a(href="/problems/find/2") 
-                  img(src="/images/preview.png")
-                a(href="/problems/find/2") 
-                  img(src="/images/download.png")
-              div.legend
-      div.span3
-        div.problem
-          div.title Cuidar el jardín
-          div.detail
-            img(src="/images/problems/003.png")
-            div.overlay
-              div.actions
-                a(href="/problems/find/2") 
-                  img(src="/images/preview.png")
-                a(href="/problems/find/2") 
-                  img(src="/images/download.png")
-              div.legend 
-                p Debe regar las plantas que se encuentran en el jadín. 
-      div.span3
-        div.problem
-          div.title Los prados
-          div.detail
-            img(src="/images/problems/005.png")
-            div.overlay
-              div.actions
-                a(href="/problems/find/2") 
-                  img(src="/images/preview.png")
-                a(href="/problems/find/2") 
-                  img(src="/images/download.png")
-              div.legend  
-    article.row-fluid
-      div.span3
-        div.problem
-          div.title Castillo de arena
-          div.detail
-            img(src="/images/problems/006.png")
-            div.overlay
-              div.actions
-              div.legend
-                p zasdfasfasdfasdf asdfasfasfasdf asdfasdfasdfasdfasfasfasd sdg sdg sd gsdg sdg sdfg 
-      div.span3
-        div.problem
-          div.title El tren
-          div.detail
-            img(src="/images/problems/007.png")
-            div.overlay
-              div.actions
-              div.legend
-      div.span3
-        div.problem
-          div.title Preparar refresco
-          div.detail
-            img(src="/images/problems/004.png")
-            div.overlay
-              div.actions
-              div.legend 
-                p zasdfasfasdfasdfa sdfasfasfasdfasd fasdfasdfasdfasfasfasd
-      div.span3
-        div.problem
-          div.title El faro
-          div.detail
-            img(src="/images/problems/002.png")
-            div.overlay
-              div.actions
-              div.legend  
+      for problem in problems
+          div.span3
+            div.problem
+              div.title #{ problem.name }
+              div.detail
+                img(src="/images/problems/00x.png")
+                div.overlay
+                  div.actions
+                    a(href="/problems/find/2").preview
+                      img(src="/images/preview.png")
+                    a(href="/problems/#{ problem.id }.tar.gz").download
+                      img(src="/images/download.png")
+                  div.legend
+                    p #{ problem.description }
   nav#page_nav
     a(href="/problems/find/2")
 

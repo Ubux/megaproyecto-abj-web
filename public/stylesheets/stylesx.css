@@ -150,6 +150,12 @@ nav li a:hover {
   -ms-transform: scale(1.2) rotate(5deg);
   transform: scale(1.2) rotate(5deg);
 }
+#condition select {
+  width: 9em;
+}
+#condition td.action {
+  text-align: center;
+}
 #drop-file-zone {
   background-color: #fefefe;
   border: dashed 2px #ccc;

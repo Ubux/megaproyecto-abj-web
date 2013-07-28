@@ -7,11 +7,16 @@ html(lang="es")
 		link(rel='stylesheet', href='/stylesheets/stylesx.css') 
 		link(rel='stylesheet', href='/stylesheets/bootstrap.css') 
 		link(rel='stylesheet', href='/stylesheets/bootstrap-responsive.css')
+		link(rel='stylesheet', href='/stylesheets/bootstrap-tagmanager.css')
+		link(rel='stylesheet', href='/stylesheets/bootstrap-notify.css')
+		link(rel='stylesheet', href='/stylesheets/alert-bangtidy.css')
 		script(src="/javascripts/jquery.js")
 		script(src="/javascripts/kinetic.js")
 		script(src="/javascripts/jquery-ui.js")
 		script(src="/socket.io/socket.io.js")
 		script(src="/javascripts/bootstrap.js")
+		script(src="/javascripts/bootstrap-tagmanager.js")
+		script(src="/javascripts/bootstrap-notify.js")
 	body
 		nav 
 			ul
@@ -19,8 +24,11 @@ html(lang="es")
 					a(href="#") 
 						img(src="/images/home.png")
 				li
-					a(href="#") 
+					a(href="#problem", data-toggle="modal") 
 						img(src="/images/save.png")
+				li
+					a#btnCondition
+						img(src="/images/condition.png")
 				li
 					a(href="#background", data-toggle="modal") 
 						img(src="/images/background.png")
@@ -39,6 +47,31 @@ html(lang="es")
 				div#figures
 				div.arrow_head.right_arrow
 
+		#problem.modal.hide.fade(tabindex="-1", role="dialog", ria-labelledby="problemLabel", aria-hidden="true") 
+			.modal-header
+				button.close(type="button", data-dismiss="modal", aria-hidden="true")
+				h3#problemLabel Finalizar diseño de problema 
+			.modal-body
+				.row
+					form#completedForm.form-horizontal(action="/problems/completed/#{ problemId }", method="post", enctype="multipart/form-data")
+						.control-group
+							label.control-label(for="inputName", value="Casa2") Nombre
+							.controls
+								input#inputName(type="text", placeholder="Nombre", name="name")
+						.control-group
+							label.control-label(for="inputDescription") Descripción
+							.controls
+								textarea#inputDescription(rows="3", placeholder="Descripción", name="description")
+						.control-group
+							label.control-label(for="inputTags") Etiquetas de búsqueda
+							.controls
+								input#inputTags(type="text", placeholder="casa, refresco, luz", name="tags")
+			.modal-footer
+				label 
+					b ¿Está seguro que desea finalizar el diseño del problema?
+				button.btn(data-dismiss="modal", aria-hidden="true") No
+				button#completed.btn.btn-primary Si
+
 		#background.modal.hide.fade(tabindex="-1", role="dialog", ria-labelledby="backgroundLabel", aria-hidden="true") 
 			.modal-header
 				button.close(type="button", data-dismiss="modal", aria-hidden="true")
@@ -55,7 +88,47 @@ html(lang="es")
 				button.btn(data-dismiss="modal", aria-hidden="true") Cerrar
 				button#upload.btn.btn-primary Aplicar
 
+		#condition.modal.hide.fade(tabindex="-1", role="dialog", ria-labelledby="conditionLabel", aria-hidden="true") 
+			.modal-header
+				button.close(type="button", data-dismiss="modal", aria-hidden="true")
+				h3#conditionLabel Condiciones
+			.modal-body
+				.row
+					.span5
+						table.table.table-bordered.table-striped
+							thead
+								tr
+									th Objeto
+									th Condición
+									th Valor
+									th Acción
+							tbody#conditions
+								tr
+									form#conditionForm(action="", method="post", enctype="multipart/form-data")
+										td
+											select(name="object")
 
+										td
+											select(name="condition")
+
+										td
+											select(name="value")
+
+										td.action 
+											a#addCondition(href="#")
+												img(src="/images/add.png")
+
+			.modal-footer
+				button.btn(data-dismiss="modal", aria-hidden="true") Cerrar
+
+		#completedModal.modal.hide.fade(tabindex="-1", role="dialog", ria-labelledby="problemLabel", aria-hidden="true") 
+			.modal-header
+				button.close(type="button", data-dismiss="modal", aria-hidden="true")
+				h3#problemLabel Se finalizó el diseño del problema.					
+			.modal-footer
+				button#exit.btn.btn-primary Salir
+
+		.notifications.top-right
 
 script
 	var $stage = {};
@@ -73,6 +146,8 @@ script
 	var $groups = {};
 	var $selectedImage = undefined;
 	var $backgroundImage = undefined;
+	var $distinctIds = {};
+	var $containerAction = 0;
 
 	$(document).on("ready", start);
 	function start()
@@ -84,6 +159,91 @@ script
 		getObjectsPaged($pageNumber, $pageSize);
 		startKeyDown();
 		startFileUploader();
+		startGoals();
+	}
+
+	function startGoals()
+	{
+		$('#exit').on("click", function(event)
+		{
+			window.location.href="/problems";
+		});
+
+		$('#completed').on("click", function(event)
+		{
+			socket.emit('completed');
+			$("#completedForm").submit();
+		});
+
+		$('#btnCondition').on("click", function(event)
+		{
+			event.preventDefault();
+			
+			$distinctIds = {};
+			$('select[name="object"]').empty();
+
+			$.each($objects,function(index, value){
+				if(!$distinctIds[value.attrs.id])
+				{
+					$distinctIds[value.attrs.id] = value.attrs.abjName.toLowerCase();
+					$('select[name="object"]').append('<option value="' + value.attrs.id + '">' + value.attrs.abjName.toLowerCase() + '</option>');
+				}
+			});	
+			$('select[name="object"]').trigger('change');
+			$("#condition").modal('show');
+		});
+
+		$('select[name="object"]').on("change", function(event)
+		{
+			if($(this).val() !== '')
+			{
+				var url = 'http://#{ serverIP }/object/findAllActions/' + $(this).val();
+				$.getJSON(url, function(actions) {
+					$('select[name="condition"]').empty();
+
+					$.each(actions,function(index, value){
+						if(value.type.toLowerCase() === "container")
+						{
+							$containerAction = value._id ;
+						}
+
+						$('select[name="condition"]').append('<option value="' + value._id + '">' + value.name.toLowerCase() + '</option>');
+					});	
+					$('select[name="condition"]').trigger('change');
+				});
+			}
+		});
+
+		$('#addCondition').on("click", function(event)
+		{
+			event.preventDefault();
+			var objectName = $distinctIds[$('select[name="object"]').val()];
+
+			var data =  '{"objectName": "' +  objectName + '", ' +
+						'"actionId": "' +  $('select[name="condition"]').val() + '", ' +
+						'"value": "' +  $('select[name="value"]').val() + '"}';
+
+			socket.emit('addcondition', data);
+		});
+
+		$('select[name="condition"]').on("change", function(event)
+		{
+			$('select[name="value"]').empty();
+
+			if($(this).val() == $containerAction)
+			{
+				$.each($distinctIds,function(index, value){
+					if($('select[name="object"]').val() !== index)
+					{
+						$('select[name="value"]').append('<option value="' + value.toLowerCase() + '">' + value.toLowerCase() + '</option>');
+					}
+				});	
+			}
+			else
+			{	
+				$('select[name="value"]').append('<option value="True">si</option><option value="False">no</option>');
+			}
+		});
 	}
 
 	function startKeyDown()
@@ -98,6 +258,8 @@ script
 				}
 			}
 		}, false);
+
+		$("#inputTags").tagsManager();
 	}
 
 	function startWorkSpace()
@@ -129,14 +291,14 @@ script
 			drop: function(event, ui) {
 				var img = $(ui.draggable.context);
 				var json = JSON.parse(img.attr('json'));
-
-				var x = ui.position.left + (json.size.width * $percentWidth);
-				var y = ui.position.top + $stage.getHeight() + 20;
+				console.log(ui.position.left);
+				var x = ui.position.left + (img.attr('number') * 52) +50;
+				var y = ui.position.top + $stage.getHeight() + 50;
 				var parentKey = '';
 
 				//Verifica si realiza drop en un contenedor
 				$.each($groups, function(key, group) {  
-					startX = group.attrs.x;
+					startX = group.attrs.x + 20;
 					startY = group.attrs.y;
 					endX = startX + $objects[key].attrs.width;
 					endY = startY + $objects[key].attrs.height;
@@ -152,6 +314,7 @@ script
 				var data =  '{"id": "' +  json._id + '", ' +
 							'"parentKey": "' +  parentKey + '", ' +
 							'"key": "' +  key + '", ' +
+							'"name": "' +  json.name + '", ' +
 							'"src": "' +  ui.draggable.context.src + '", ' +
 							'"x": ' + x + ', ' +
 							'"y": ' + y + ', ' +
@@ -202,10 +365,17 @@ script
 
 		socket.on('startproblem', function (problem) {
 			var jsonProblem = JSON.parse(problem);
-			console.log(jsonProblem);
+
+			var imageSrc = "casa.jpg";
+			if(jsonProblem.background)
+			{
+				imageSrc = jsonProblem.background;
+			}
+			
+			updateConditions(jsonProblem.conditions);
 
 			var imageObj = new Image();
-			imageObj.src = 'http://#{ serverIP }/images/background/' + jsonProblem.background;
+			imageObj.src = 'http://#{ serverIP }/images/background/' + imageSrc;
 
 			$backgroundImage = new Kinetic.Image({
 				image: imageObj,
@@ -218,19 +388,19 @@ script
 			});
 
 			$layer.add($backgroundImage);
-			$layer.draw();
+			setTimeout(function(){$layer.draw();},500);
 
 			$.each(jsonProblem.objects,function(index, value){
 				var object = value.object; 
 				var position = value.position;
 				var size = value.object.size;
-				drawImage(object._id, value.key, 'http://#{ serverIP }/images/objects/'+ object.image, position.x, position.y, size.height, size.width);
+				drawImage(object._id, value.key, object.name, 'http://#{ serverIP }/images/objects/'+ object.image, position.x, position.y, size.height, size.width);
 
 				$.each(value.children,function(childrenIndex, childrenValue){
 					var childrenObject = childrenValue.object; 
 					var childrendPosition = childrenValue.position;
 					var childrenSize = childrenValue.object.size; 
-					drawChildImage($groups[value.key], childrenObject._id, childrenValue.key, 'http://#{ serverIP }/images/objects/'+ childrenObject.image, childrendPosition.x, childrendPosition.y, childrenSize.height, childrenSize.width);
+					drawChildImage($groups[value.key], childrenObject._id, childrenValue.key, childrenObject.name, 'http://#{ serverIP }/images/objects/'+ childrenObject.image, childrendPosition.x, childrendPosition.y, childrenSize.height, childrenSize.width);
 				});
 			});		
 
@@ -243,9 +413,9 @@ script
 
 				if(json.parentKey === '')
 				{
-					drawImage(json.id, json.key, json.src, json.x, json.y, json.height, json.width);		
+					drawImage(json.id, json.key, json.name, json.src, json.x, json.y, json.height, json.width);		
 				}else{
-					drawChildImage($groups[json.parentKey], json.id, json.key, json.src, json.x, json.y, json.height, json.width);
+					drawChildImage($groups[json.parentKey], json.id, json.key, json.name, json.src, json.x, json.y, json.height, json.width);
 				}
 			}
 			if(action === 'move')
@@ -281,19 +451,58 @@ script
 			if(action == 'background')
 			{
 				var imageObj = new Image();
-				imageObj.src = '/images/background/' + data;
+				imageObj.src = 'http://#{ serverIP }/images/background/' + data;
+				console.log(imageObj);
 				$backgroundImage.setImage(imageObj);
-				setTimeout(function(){$layer.draw();},70);
+				setTimeout(function(){$layer.draw();},1000);
+			}
+			if(action == 'updateconditions')
+			{
+				console.log('----1----');
+				console.log(data);
+				console.log('----2----');
+				console.log(JSON.parse(data));
+				updateConditions(JSON.parse(data));
 			}
 			
 		});
 
 		socket.on('updateworkers', function (message) {
-			console.log(message);
+			$('.top-right').notify({
+				message: { text: 'Se ha unido un nuevo colaborador!' }
+			}).show();
+		});
+
+		socket.on('completed', function (message) {
+			$('#completedModal').modal('show');
 		});
 	}
 
-	function drawImage(id, key, src, x, y, height, width) { 
+	function updateConditions(conditions)
+	{
+		console.log(conditions);
+		$('.viewCondition').empty();
+		var conditionView = '';
+		$.each(conditions,function(index, value){
+
+			conditionView = '<tr class="viewCondition"><td>' + value.objectName + '</td><td><b>' + value.action.name + '</b></td><td>' + value.value + '</td><td class="action remove"> <a class="removeCondition" href="#" objectName="' + value.objectName + '" actionId="' + value.action._id + '" value="' + value.value + '"><img src="/images/remove.png"></a></td></tr>';
+			$('#conditions').append(conditionView);
+		});
+
+		$('.removeCondition').on("click", function(event)
+		{
+			event.preventDefault();
+			
+			var data =  '{"objectName": "' +  $(this).attr('objectName') + '", ' +
+						'"actionId": "' +  $(this).attr('actionId') + '", ' +
+						'"value": "' +  $(this).attr('value') + '"}';
+
+			socket.emit('removecondition', data);
+		});
+
+	}
+
+	function drawImage(id, key, name, src, x, y, height, width) { 
 		var newGroup = new Kinetic.Group({
 			x: x,
 			y: y, 
@@ -308,6 +517,7 @@ script
 			id: id,
 			key: key,
 			image: imageObj,
+			abjName: name,
 			x: 0,
 			y: 0,
 			width: width * $percentWidth,
@@ -342,7 +552,7 @@ script
 		setTimeout(function(){$layer.draw();},70);
 	}
 
-	function drawChildImage(group, id, key, src, x, y, height, width)
+	function drawChildImage(group, id, key, name, src, x, y, height, width)
 	{
 		var imageObj = new Image();
 		imageObj.src = src;
@@ -350,6 +560,7 @@ script
 			id: id,
 			key: key,
 			image: imageObj,
+			abjName: name,
 			x: 0,
 			y: -1*((height * $percentHeight)/3),
 			width: (width * $percentWidth)/3,
@@ -388,6 +599,7 @@ script
 				var img = $('<img>');
 				img.attr('src', '/images/objects/' + this.image);
 				img.attr('class', 'drag');
+				img.attr('number', count);
 				img.attr('json', JSON.stringify(this));
 				img.draggable({ revert: true });
 				figure.append(img);

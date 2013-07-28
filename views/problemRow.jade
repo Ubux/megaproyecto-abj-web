@@ -1,0 +1,15 @@
+article.row-fluid
+  for problem in problems
+      div.span3
+        div.problem
+          div.title #{ problem.name }
+          div.detail
+            img(src="/images/problems/002.png")
+            div.overlay
+              div.actions
+                a(href="/problems/find/2").preview
+                  img(src="/images/preview.png")
+                a(href="/problems/#{ problem.id }.tar.gz").download
+                  img(src="/images/download.png")
+              div.legend
+                p #{ problem.description }
